@@ -77,26 +77,24 @@ def load_serif_font(filepath):
             height = int(lines[0].split('HEIGHT')[1].strip())
         except Exception:
             pass
-    current_char = None
-    width = 0
-    bitmap = []
     for line in lines[1:]:
         line = line.strip()
         if not line:
             continue
-        if line.startswith('GLYPH'):
-            if current_char is not None:
-                glyphs[current_char] = (width, height, bitmap)
-            parts = line.split()
-            current_char = parts[1]
-            if current_char == 'SPACE':
-                current_char = ' '
-            width = int(parts[3])
+        parts = line.split(maxsplit=2)
+        if not parts:
+            continue
+        char = parts[0]
+        if char == 'SPACE':
+            char = ' '
+        width = int(parts[1])
+        joined = parts[2] if len(parts) > 2 else ""
+        if not joined:
             bitmap = []
         else:
-            bitmap.append(line)
-    if current_char is not None:
-        glyphs[current_char] = (width, height, bitmap)
+            row_len = len(joined) // height if height > 0 else 0
+            bitmap = [joined[j:j+row_len] for j in range(0, len(joined), row_len)] if row_len > 0 else []
+        glyphs[char] = (width, height, bitmap)
     return glyphs, height
 
 class NewspaperCanvas:
